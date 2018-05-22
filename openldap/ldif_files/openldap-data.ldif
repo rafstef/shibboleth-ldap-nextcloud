@@ -1,0 +1,39 @@
+dn: ou=groups,dc=mydomain,dc=local
+objectclass: top
+objectclass: organizationalUnit
+ou: groups
+
+dn: ou=people,dc=mydomain,dc=local
+objectclass: top
+objectclass: organizationalUnit
+ou: people
+
+dn: uid=pippo,ou=people,dc=mydomain,dc=local
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Pippo Pippo
+sn: pippo
+uid: pippo
+userPassword: pippo
+
+dn: uid=pluto,ou=people,dc=mydomain,dc=local
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Pluto Pluto
+sn: pluto
+uid: pluto
+userPassword: pluto
+
+dn: uid=paperino,ou=people,dc=mydomain,dc=local
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Paperino Paperino
+sn: paperino
+uid: paperino
+userPassword: paperino
