@@ -1,5 +1,6 @@
 version: '3'
 services:
+  #openldap
   ldap:
     image: osixia/openldap:1.2.1
     container_name: ldap
@@ -41,6 +42,7 @@ services:
       - "636:636"
     domainname: "mydomain.local" # important: same as hostname
     hostname: "mydomain.local"
+  #openldap seed  
   ldap-seed:
     image: osixia/openldap:1.2.1
     volumes:
@@ -48,14 +50,80 @@ services:
     depends_on:
       - ldap
     entrypoint: sh /ldif_files/addAll.sh
+  #ldap admin
   phpldapadmin:
     image: osixia/phpldapadmin:latest
     container_name: phpldapadmin
     environment:
-      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+      PHPLDAPADMIN_LDAP_HOSTS: "ldap"
       PHPLDAPADMIN_HTTPS: "false"
     ports:
       - "8080:80"
     depends_on:
       - ldap
+
+  #nexcloud database
+  nextcloud_db:
+    image: postgres:10.4
+    restart: always
+    volumes:
+      - ./nextcloud/db:/var/lib/postgresql/data
+    env_file:
+      - ./nextcloud/db.env
+
+  nextcloud_app:  
+    image: nextcloud:12.0-fpm-alpine
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html
+    environment:
+      - POSTGRES_HOST=nextcloud_db
+    env_file:
+      - ./nextcloud/db.env
+    depends_on:
+      - nextcloud_db
+
+  nextcloud_web:
+    build: ./nextcloud/web
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html:ro
+    environment:
+      - VIRTUAL_HOST=mydomain.local
+      - LETSENCRYPT_HOST=mydomain.local
+      - LETSENCRYPT_EMAIL=test@mydomain.local
+    depends_on:
+      - nextcloud_app
+
+  nextcloud_proxy:
+    build: ./nextcloud/proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion:v1.8.1
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - nextcloud_proxy
+
+volumes:
+  db:
+  nextcloud:
+  certs:
+  vhost.d:
+  html:    
   
